@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>ArcGIS Developer Guide: Geocode and search</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.26/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.26"></script>
+    <script>
+      require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/widgets/Search",
+      ], (esriConfig, Map, MapView, Search) => {
+        esriConfig.apiKey = "YOUR_API_KEY";
+        let zoom = 2;
+
+        const map = new Map({
+          basemap: "arcgis-community",
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [-30, 20],
+          zoom: zoom,
+        });
+
+        const search = new Search({
+          view: view,
+          // sources: search in a feature layer
+          // popupEnabled: false,
+          // maxSuggestions: 3,
+        });
+
+        view.ui.add(search, "top-right");
+      });
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
