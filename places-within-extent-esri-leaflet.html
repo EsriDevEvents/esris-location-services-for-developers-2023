@@ -1,0 +1,1117 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mulish&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Load Leaflet from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.0.1/dist/esri-leaflet-vector.js"></script>
+
+    <!-- Calcite components -->
+    <script
+      type="module"
+      src="https://js.arcgis.com/calcite-components/1.0.5/calcite.esm.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://js.arcgis.com/calcite-components/1.0.5/calcite.css"
+    />
+
+    <!-- Load Esri Leaflet Geocoder from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/esri-leaflet-geocoder@^3.1.3/dist/esri-leaflet-geocoder.css"
+    />
+    <script src="https://unpkg.com/esri-leaflet-geocoder@^3.1.3/dist/esri-leaflet-geocoder.js"></script>
+
+    <!-- ArcGIS REST JS: request and places -->
+    <script src="https://unpkg.com/@esri/arcgis-rest-request@4.0.0/dist/bundled/request.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-request@4.1.1/dist/bundled/request.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-places@1.0.1/dist/bundled/places.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-routing@4.0.3/dist/bundled/routing.umd.min.js"></script>
+    <script
+      src="https://kit.fontawesome.com/ae81c1475a.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: "Manrope", sans-serif;
+      overflow: hidden; /* Hide scrollbars */
+    }
+    #map {
+      position: absolute;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #dash {
+      margin-right: 4px;
+      font-size: 20px;
+    }
+
+    #ratingValue,
+    #ratingValue2,
+    #ratingValue3,
+    #ratingValue4,
+    #dash {
+      display: none;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .description {
+      display: flex;
+      margin: 5px 0 0 5px;
+    }
+    .ratingStuff {
+      display: flex;
+      margin: 5px 0 0 5px;
+    }
+    #ratingLabel {
+      font-size: 14px;
+      margin-top: 1.5px;
+    }
+
+    #dash {
+      margin-left: 5px;
+    }
+
+    .search {
+      margin-right: 10px;
+    }
+
+    .popup {
+      font-size: 11px;
+    }
+
+    .place {
+      font-size: 13px;
+    }
+
+    .title {
+      display: flex;
+    }
+
+    #titleStuff {
+      display: flex;
+    }
+
+    #place-control {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+      width: 335px;
+      max-height: 800px;
+    }
+
+    #places-flow {
+      overflow: scroll;
+      overflow-x: hidden; /* Hide horizontal scrollbar */
+    }
+
+    #places-list {
+      background: white;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .sorting {
+      display: flex;
+      justify-content: flex-end;
+      padding: 5px;
+    }
+
+    #sortBy {
+      margin: 12px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    #radioBtns {
+      margin: 4px 4px 0 0;
+    }
+
+    .sortName {
+      font-size: 15.5px;
+    }
+
+    .placeItem {
+      border: #e4e1e1 solid 1px;
+      padding: 10px;
+    }
+
+    .placeTtle {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .placeCat {
+      font-size: 12.5px;
+    }
+
+    .placeItem:hover {
+      background: #eee;
+      cursor: pointer;
+    }
+
+    #categoryControl {
+      position: absolute;
+      top: 10px;
+      left: 360px;
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+      width: 70%;
+    }
+
+    #categoryLabel {
+      margin-top: 1px;
+    }
+
+    .chip {
+      /*   border: 0.2px solid gray; */
+      padding: 2px;
+      box-shadow: 0.3px 0.3px 0.3px 0.3px #888888;
+      background: white;
+      font-weight: 700;
+      font-size: 12.5px;
+    }
+
+    .icon {
+      margin-right: 4px;
+    }
+
+    .chip:hover {
+      cursor: pointer;
+    }
+
+    #placeInfo {
+      position: absolute;
+      left: 360px;
+      top: 55px;
+      z-index: 2;
+      width: 335px;
+    }
+
+    .placePanel {
+      border-radius: 15px;
+    }
+
+    #thePlaceName {
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    #placeTopInfo {
+      padding: 15px;
+      background-color: black;
+      color: white;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .closeBtn {
+      margin: -11px;
+    }
+
+    .image {
+      width: 32px;
+      margin-right: 7px;
+    }
+    .img {
+      margin-right: 7px;
+      width: 15%;
+      height: 15%;
+    }
+  </style>
+  <body>
+    <div id="place-control">
+      <calcite-input
+        type="text"
+        id="search-input"
+        placeholder="Enter a place name or category"
+      >
+        <calcite-button
+          kind="inverse"
+          icon-start="x"
+          id="closeButton"
+          type="submit"
+          slot="action"
+          class="hide"
+          appearance="outline-fill"
+        ></calcite-button>
+        <calcite-button
+          kind="inverse"
+          icon-start="search"
+          id="search-button"
+          type="submit"
+          slot="action"
+          onclick="clearRadios()"
+        ></calcite-button>
+      </calcite-input>
+      <calcite-flow id="places-flow" class="hide">
+        <div class="sorting" id="sorting">
+          <span id="sortBy" class="whiteBack">Sort By</span>
+          <calcite-radio-button-group
+            name="Options"
+            layout="vertical"
+            id="radioBtns"
+          >
+            <calcite-label layout="inline">
+              <calcite-radio-button
+                value="dist"
+                onclick="showOrdered()"
+                id="button1"
+              ></calcite-radio-button>
+              <span class="sortName">Distance</span>
+            </calcite-label>
+            <calcite-label layout="inline">
+              <calcite-radio-button
+                value="alpha"
+                onclick="sortAlpha()"
+                id="button2"
+              ></calcite-radio-button>
+              <span class="sortName">Alphabetical</span>
+            </calcite-label>
+          </calcite-radio-button-group>
+        </div>
+        <calcite-list id="places-list"></calcite-list>
+      </calcite-flow>
+    </div>
+
+    <div id="placeInfo" class="hide">
+      <calcite-panel class="placePanel">
+        <div id="placeTopInfo">
+          <div class="top">
+            <div class="topLeft">
+              <div id="titleStuff">
+                <div id="title"></div>
+                <div id="thePlaceName"></div>
+              </div>
+              <div class="description">
+                <div id="categoryLabel"></div>
+                <span id="dash">-</span>
+                <span id="ratingValue">$</span>
+                <span id="ratingValue2">$</span>
+                <span id="ratingValue3">$</span>
+                <span id="ratingValue4">$</span>
+              </div>
+              <div class="ratingStuff">
+                <span id="ratingLabel"></span>
+                <calcite-rating read-only id="stars"></calcite-rating>
+              </div>
+            </div>
+            <div class="topRight">
+              <calcite-button
+                icon-start="x-circle-f"
+                class="closeBtn"
+                id="closeBtn"
+                appearance="transparent"
+                kind="inverse"
+                scale="l"
+              ></calcite-button>
+            </div>
+          </div>
+        </div>
+        <calcite-block
+          id="addressLabel"
+          heading="Address"
+          scale="l"
+          description=""
+        >
+          <calcite-icon scale="m" slot="icon" icon="map-pin"></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="walking"
+          ></calcite-action>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="biking"
+          ></calcite-action>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="car"
+          ></calcite-action>
+        </calcite-block>
+        <calcite-block id="phoneLabel" heading="Phone" scale="l" description="">
+          <calcite-icon scale="m" slot="icon" icon="mobile"></calcite-icon>
+        </calcite-block>
+        <calcite-block id="hoursLabel" heading="Hours" scale="l" description="">
+          <calcite-icon scale="m" slot="icon" icon="clock"></calcite-icon>
+        </calcite-block>
+        <calcite-block id="emailLabel" heading="Email" scale="l" description="">
+          <calcite-icon
+            scale="m"
+            slot="icon"
+            icon="email-address"
+          ></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="launch"
+          ></calcite-action>
+        </calcite-block>
+        <calcite-block
+          id="websiteLabel"
+          heading="Website"
+          scale="l"
+          description=""
+        >
+          <calcite-icon scale="m" slot="icon" icon="information"></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="launch"
+          ></calcite-action>
+        </calcite-block>
+        <calcite-block
+          id="facebookLabel"
+          heading="Facebook"
+          scale="l"
+          description=""
+        >
+          <calcite-icon
+            scale="m"
+            slot="icon"
+            icon="speech-bubble-social"
+          ></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="launch"
+          ></calcite-action>
+        </calcite-block>
+        <calcite-block
+          id="twitterLabel"
+          heading="Twitter"
+          scale="l"
+          description=""
+        >
+          <calcite-icon
+            scale="m"
+            slot="icon"
+            icon="speech-bubbles"
+          ></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="launch"
+          ></calcite-action>
+        </calcite-block>
+        <calcite-block
+          id="instagramLabel"
+          heading="Instagram"
+          scale="l"
+          description=""
+        >
+          <calcite-icon scale="m" slot="icon" icon="camera"></calcite-icon>
+          <calcite-action
+            slot="control"
+            text="Information"
+            icon="launch"
+          ></calcite-action>
+        </calcite-block>
+      </calcite-panel>
+    </div>
+
+    <div id="categoryControl">
+      <calcite-chip-group label="demo-group-label">
+        <calcite-chip
+          class="restaurants chip"
+          value="Restaurants"
+          appearance="outline-fill"
+          id="restaurantChip"
+        >
+          <i class="fa-solid fa-utensils icon"></i>
+          Restaurants
+        </calcite-chip>
+        <calcite-chip
+          class="bars chip"
+          value="Bars"
+          appearance="outline-fill"
+          id="barChip"
+        >
+          <i class="fa-solid fa-martini-glass-citrus icon"></i>
+          Bars
+        </calcite-chip>
+        <calcite-chip
+          class="fuel chip"
+          value="Fuel"
+          appearance="outline-fill"
+          id="fuelChip"
+        >
+          <i class="fa-solid fa-gas-pump icon"></i>
+          Fuel
+        </calcite-chip>
+        <calcite-chip
+          class="movies chip"
+          value="Movie Theaters"
+          appearance="outline-fill"
+          id="movieChip"
+        >
+          <i class="fa-solid fa-ticket icon"></i>
+          Movies
+        </calcite-chip>
+        <!-- <calcite-chip
+          class="museums chip"
+          value="Museums"
+          appearance="outline-fill"
+          id="museumChip"
+        >
+          <i class="fa-solid fa-building-columns icon"></i>
+          Museums
+        </calcite-chip> -->
+        <!-- <calcite-chip
+          class="hospitals chip"
+          value="Hospitals"
+          appearance="outline-fill"
+          id="hospitalChip"
+        >
+          <i class="fa-solid fa-hospital icon"></i>
+          Hospitals
+        </calcite-chip> -->
+      </calcite-chip-group>
+    </div>
+    <div id="map"></div>
+    <script>
+      const placeInfo = document.getElementById("placeInfo");
+      const addressElement = document.getElementById("addressLabel");
+      const phoneElement = document.getElementById("phoneLabel");
+      const hoursElement = document.getElementById("hoursLabel");
+      const emailElement = document.getElementById("emailLabel");
+      const websiteElement = document.getElementById("websiteLabel");
+      const facebookElement = document.getElementById("facebookLabel");
+      const twitterElement = document.getElementById("twitterLabel");
+      const instagramElement = document.getElementById("instagramLabel");
+      let sorting = document.getElementById("sorting");
+      let ratingValue = document.getElementById("ratingValue");
+      let ratingValue2 = document.getElementById("ratingValue2");
+      let ratingValue3 = document.getElementById("ratingValue3");
+      let ratingValue4 = document.getElementById("ratingValue4");
+      let dash = document.getElementById("dash");
+      let ratingLabel = document.getElementById("ratingLabel");
+
+      let longitude = -122.3421;
+      let latitude = 47.6209;
+      let placesList = document.getElementById("places-list");
+      let placesFlow = document.getElementById("places-flow");
+      let sortBy = document.getElementById("sortBy");
+      let radioBtns = document.getElementById("radioBtns");
+      const control = document.getElementById("place-control");
+      const input = document.getElementById("search-input");
+      let button1 = document.getElementById("button1");
+      let button2 = document.getElementById("button2");
+      let stars = document.getElementById("stars");
+      stars.setAttribute("scale", "s");
+      stars.classList.add("stars");
+      let placesCoords = [];
+      let placesIds = [];
+      let placesNamesCategories = [];
+      let pNamesCategories = [];
+      let orderedIds = [];
+      let arrayCoords = [];
+      let orderedDistances = [];
+      placeInfo.classList.add("hide");
+      let currentLocation = [[longitude, latitude]];
+      let restaurantChip = document.getElementById("restaurantChip");
+      let fuelChip = document.getElementById("fuelChip");
+      let movieChip = document.getElementById("movieChip");
+      // let museumChip = document.getElementById("museumChip");
+      let barChip = document.getElementById("barChip");
+      // let hospitalChip = document.getElementById("hospitalChip");
+      let iconUrl =
+        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png";
+      let width = 24;
+      let height = 40;
+      let marker;
+      let img = new Image();
+      const popup = document.createElement("div");
+      popup.classList.add("popup");
+      let website = "";
+
+      document
+        .getElementById("search-button")
+        .addEventListener("click", (e) => {
+          showPlaces(input.value);
+        });
+      let closeBtn = document.getElementById("closeBtn");
+      closeBtn.addEventListener("click", () => {
+        placeInfo.classList.add("hide");
+        marker.closePopup();
+      });
+
+      restaurantChip.addEventListener("click", (e) => {
+        input.value = "restaurants";
+        showPlaces("restaurants");
+        iconUrl =
+          "https://cdn4.iconfinder.com/data/icons/map-pins-2/256/21-512.png";
+        width = 43;
+        height = 44;
+        clearRadios();
+      });
+      barChip.addEventListener("click", (e) => {
+        input.value = "bars";
+        showPlaces("bars");
+        iconUrl =
+          "https://cdn3.iconfinder.com/data/icons/map-locations-flat-pixel-perfect/64/pin-map-location-08-512.png";
+        width = 38;
+        clearRadios();
+      });
+      fuelChip.addEventListener("click", (e) => {
+        input.value = "fuel";
+        showPlaces("fuel");
+        iconUrl =
+          "https://cdn4.iconfinder.com/data/icons/map-pins-2/256/2-512.png";
+        width = 46;
+        height = 45;
+        clearRadios();
+      });
+      movieChip.addEventListener("click", (e) => {
+        input.value = "movies";
+        showPlaces("movies");
+        iconUrl =
+          "https://cdn0.iconfinder.com/data/icons/movies-11/32/theater_cinema_movie_location_map_marker_pin-512.png";
+        width = 45;
+        height = 45;
+        clearRadios();
+      });
+      // museumChip.addEventListener("click", (e) => {
+      //   input.value = "museums";
+      //   showPlaces("museums");
+      //   iconUrl = "https://cdn-icons-png.flaticon.com/512/994/994337.png";
+      //   width = 40;
+      //   height = 38;
+      //   clearRadios();
+      // });
+      // hospitalChip.addEventListener("click", (e) => {
+      //   input.value = "hospitals";
+      //   showPlaces("hospitals");
+      //   width = 40;
+      //   iconUrl =
+      //     "https://cdn0.iconfinder.com/data/icons/medical-and-health-vector-icons/65/21-512.png";
+      //   clearRadios();
+      // });
+
+      const rapiKey = "YOUR_API_KEY";
+      const rauthentication = new arcgisRest.ApiKeyManager({
+        key: rapiKey,
+      });
+
+      function insertAt(array, index, ...elementsArray) {
+        array.splice(index, 0, ...elementsArray);
+      }
+
+      let map;
+      const apiKey = "YOUR_API_KEY";
+      const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
+      const basemapEnum = "ArcGIS:Community";
+
+      function clearRadios() {
+        button1.checked = false;
+        button2.checked = false;
+      }
+
+      map = L.map("map", {
+        minZoom: 14,
+      });
+      map.setView([latitude, longitude], 13);
+      L.esri.Vector.vectorBasemapLayer(basemapEnum, {
+        apiKey: apiKey,
+      }).addTo(map);
+      map.zoomControl.setPosition("bottomright");
+
+      let layerGroup = L.layerGroup().addTo(map);
+      //   const searchControl = L.esri.Geocoding.geosearch({
+      //     expanded: true,
+      //     position: "topright",
+      //     placeholder: "Enter an address or location",
+      //     collapseAfterResult: false,
+      //     useMapBounds: false,
+      //     providers: [
+      //       L.esri.Geocoding.arcgisOnlineProvider({
+      //         apikey: apiKey,
+      //       }),
+      //     ],
+      //   }).addTo(map);
+
+      //   searchControl.on("results", (data) => {
+      //     placeInfo.classList.add("hide");
+      //     input.value = "";
+      //     closeButton.classList.add("hide");
+      //     layerGroup.clearLayers();
+      //     placesList.innerHTML = "";
+      //     placesList.classList.add("hide");
+      //     sortBy.classList.add("hide");
+      //     radioBtns.classList.add("hide");
+      //     button1.checked = false;
+      //     button2.checked = false;
+      //     if (placesIds.length != 0) {
+      //       placesIds = [];
+      //       placesNamesCategories = [];
+      //     }
+      //     result.clearLayers();
+      //     for (let i = data.results.length - 1; i >= 0; i--) {
+      //       const marker = L.marker(data.results[i].latlng, { icon: myIcon });
+      //       const lngLatString = `${
+      //         Math.round(data.results[i].latlng.lng * 100000) / 100000
+      //       }, ${Math.round(data.results[i].latlng.lat * 100000) / 100000}`;
+      //       marker.bindPopup(`<b>Search Location:</b><div>${lngLatString}</div>`);
+      //       result.addLayer(marker);
+      //       latitude = data.results[i].latlng.lat;
+      //       longitude = data.results[i].latlng.lng;
+      //       currentLocation = [[longitude, latitude]];
+      //       // marker.openPopup();
+      //     }
+      //   });
+
+      let myIcon = new L.Icon({
+        iconUrl:
+          "https://cdn3.iconfinder.com/data/icons/maps-and-navigation-7/65/68-512.png",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/images/markers-shadow.png",
+        iconSize: [40, 42],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+
+      const setElementProperties = (element, validValue) => {
+        if (validValue) {
+          element.classList.remove("hide");
+          element.description = validValue;
+        } else {
+          element.classList.add("hide");
+        }
+      };
+
+      const closeButton = document.getElementById("closeButton");
+
+      function insertAt(array, index, ...elementsArray) {
+        array.splice(index, 0, ...elementsArray);
+      }
+
+      let myMarker = L.marker([latitude, longitude], { icon: myIcon });
+      myMarker.bindPopup(
+        `<b>Current Location:</b><div>${longitude}, ${latitude}</div>`
+      );
+      const result = L.layerGroup().addTo(map);
+      result.addLayer(myMarker);
+
+      async function showPlaces(text) {
+        sorting.style.backgroundColor = "white";
+        sorting.style.opacity = 1;
+        layerGroup.clearLayers();
+        resetSearch(true);
+        placesList.innerHTML = "";
+        placesFlow.classList.add("show");
+        placesFlow.classList.remove("hide");
+        placesList.classList.remove("hide");
+        sortBy.classList.remove("hide");
+        radioBtns.classList.remove("hide");
+        const bounds = map.getBounds();
+        const topRight = bounds.getNorthEast();
+        const bottomLeft = bounds.getSouthWest();
+        const params = {
+          xmin: bottomLeft.lng,
+          ymin: bottomLeft.lat,
+          xmax: topRight.lng,
+          ymax: topRight.lat,
+          searchText: text,
+          // pageSize: 20,
+          authentication,
+        };
+        placesIds = [];
+        placesCoords = [];
+        orderedIds = [];
+        arrayCoords = [];
+        placesNamesCategories = [];
+        pNamesCategories = [];
+        orderedDistances = [];
+        placeInfo.classList.add("hide");
+        iconUrl =
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png";
+        width = 24;
+        height = 40;
+        ratingValue.style.display = "none";
+        ratingValue2.style.display = "none";
+        ratingValue3.style.display = "none";
+        ratingValue4.style.display = "none";
+        dash.style.display = "none";
+
+        let response = await arcgisRest.findPlacesWithinExtent(params);
+        if (response) {
+          response.results.forEach((result) => {
+            addMarker(result);
+            let location = result.location;
+            let locationId = result.placeId;
+            placesCoords.push(location);
+            placesIds.push(locationId);
+            placesNamesCategories.push({
+              name: result.name,
+              category: result.categories[0].label,
+              placeId: result.placeId,
+            });
+            pNamesCategories.push({
+              name: result.name,
+              category: result.categories[0].label,
+              placeId: result.placeId,
+            });
+          });
+
+          while (response.nextPage) {
+            response = await response.nextPage();
+            response.results.forEach((searchResult) => {
+              addMarker(searchResult);
+              let location = searchResult.location;
+              let locationId = searchResult.placeId;
+              placesCoords.push(location);
+              placesIds.push(locationId);
+            });
+          }
+        }
+        arrayCoords = placesCoords.map(Object.values);
+      }
+
+      function addMarker(result) {
+        placeInfo.classList.add("hide");
+        const placeItem = document.createElement("div");
+        const placeTtle = document.createElement("div");
+        const placeCat = document.createElement("div");
+        placeTtle.innerHTML = result.name;
+        placeCat.innerHTML = result.categories[0].label;
+        placeItem.append(placeTtle);
+        placeItem.append(placeCat);
+        placesList.append(placeItem);
+        placeItem.classList.add("placeItem");
+        placeTtle.classList.add("placeTtle");
+        placeCat.classList.add("placeCat");
+        placeItem.addEventListener("click", (e) => {
+          goToPlace(result.placeId);
+          placeInfo.classList.remove("hide");
+        });
+        if (input.value == "Parks" || input.value == "parks") {
+          width = 40;
+          iconUrl =
+            "https://cdn2.iconfinder.com/data/icons/map-locations-flat-pixel-perfect/64/pin-map-location-27-512.png";
+          clearRadios();
+        }
+        let purpleIcon = new L.Icon({
+          iconUrl: iconUrl,
+          shadowUrl:
+            "https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/images/markers-shadow.png",
+          iconSize: [width, height],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        });
+
+        const marker = L.marker([result.location.y, result.location.x], {
+          icon: purpleIcon,
+        }).addTo(layerGroup);
+        marker.id = result.placeId;
+        marker.bindPopup(getDetails, {
+          minWidth: 200,
+        });
+      }
+
+      function getDetails(place) {
+        arcgisRest
+          .getPlaceDetails({
+            placeId: place.id,
+            authentication,
+            requestedFields: ["all"],
+          })
+          .then((result) => {
+            img.classList.add("image");
+            document.getElementById("thePlaceName").innerHTML =
+              result.placeDetails.name;
+            let rating = result.placeDetails?.rating?.user;
+            let costAmount = result.placeDetails.rating.price;
+
+            const hoursElement = document.getElementById("hoursLabel");
+            if (costAmount == "cheap") {
+              dash.style.display = "block";
+              ratingValue.style.display = "block";
+            } else if (costAmount == "moderate") {
+              dash.style.display = "block";
+              ratingValue.style.display = "block";
+              ratingValue2.style.display = "block";
+            } else if (costAmount == "expensive") {
+              dash.style.display = "block";
+              ratingValue.style.display = "block";
+              ratingValue2.style.display = "block";
+              ratingValue3.style.display = "block";
+            } else if (costAmount == "veryExpensive") {
+              dash.style.display = "block";
+              ratingValue.style.display = "block";
+              ratingValue2.style.display = "block";
+              ratingValue3.style.display = "block";
+              ratingValue4.style.display = "block";
+            } else {
+              ratingValue.style.display = "none";
+              ratingValue2.style.display = "none";
+              ratingValue3.style.display = "none";
+              ratingValue4.style.display = "none";
+              dash.style.display = "none";
+            }
+
+            website = result.placeDetails?.contactInfo?.website;
+            let title = document.getElementById("title");
+            if (!title.contains(img) && website) {
+              title.appendChild(img);
+            } else if (title.contains(img) && website) {
+              title.removeChild(img);
+              title.appendChild(img);
+            } else {
+              title.removeChild(img);
+            }
+            if (rating) {
+              stars.style.display = "block";
+              stars.setAttribute("average", rating);
+            } else {
+              stars.style.display = "none";
+            }
+            if (website) {
+              if ((img.src += "sz=64")) {
+                img.src = `https://www.google.com/s2/favicons?domain=${website}&sz=32`;
+              } else {
+                img.src = "";
+              }
+            }
+            setElementProperties(
+              addressElement,
+              result.placeDetails?.address?.streetAddress
+            );
+            setElementProperties(
+              phoneElement,
+              result.placeDetails?.contactInfo?.telephone
+            );
+            setElementProperties(
+              hoursElement,
+              result.placeDetails?.hours?.openingText
+            );
+            setElementProperties(
+              emailElement,
+              result.placeDetails?.contactInfo?.email
+            );
+            setElementProperties(
+              websiteElement,
+              result.placeDetails?.contactInfo?.website
+            );
+            let facebook = result.placeDetails?.socialMedia?.facebookId
+              ? `www.facebook.com/${result.placeDetails.socialMedia.facebookId}`
+              : null;
+            setElementProperties(facebookElement, facebook);
+            let twitter = result.placeDetails?.socialMedia?.twitter
+              ? `www.twitter.com/${result.placeDetails.socialMedia.twitter}`
+              : null;
+            setElementProperties(twitterElement, twitter);
+            let instagram = result.placeDetails?.socialMedia?.instagram
+              ? `www.instagram.com/${result.placeDetails.socialMedia.instagram}`
+              : null;
+            setElementProperties(instagramElement, instagram);
+
+            let popupContents;
+            placeInfo.classList.remove("hide");
+            document.getElementById("categoryLabel").innerHTML =
+              result.placeDetails.categories[0].label;
+            if (!website) {
+              popupContents = `<div class="title">
+            <b><span class="place">${result.placeDetails.name}</span></b><br></div>`;
+            } else {
+              website = website.replace(/^https?:\/\//, "");
+              let theImg = new Image();
+              theImg.src = `https://www.google.com/s2/favicons?domain=${website}&sz=32`;
+              popupContents = `<div class="title"><image src=${theImg.src} class="img"/>
+          <b><span class="place">${result.placeDetails.name}</span></b><br></div>`;
+            }
+
+            if (result.placeDetails.address.streetAddress)
+              popupContents += `${result.placeDetails.address.streetAddress}<br>`;
+            if (result.placeDetails.contactInfo.telephone)
+              popupContents += `${result.placeDetails.contactInfo.telephone}<br>`;
+            popup.innerHTML = popupContents;
+          });
+        return popup;
+      }
+
+      async function showOrdered() {
+        orderedIds = [];
+        orderedDistances = [];
+        let incidents = currentLocation;
+        let facilities = arrayCoords;
+        await arcgisRest
+          .closestFacility({
+            incidents: incidents,
+            facilities: facilities,
+            returnCFRoutes: true,
+            params: {
+              defaultTargetFacilityCount: arrayCoords.length,
+            },
+            authentication: rauthentication,
+          })
+          .then((response) => {
+            map.closePopup();
+            response.routes.features.forEach((thing) => {
+              console.log(thing.attributes.Total_Miles);
+              orderedDistances.push(thing.attributes.Total_Miles);
+              // console.log(thing.attributes.Total_Miles + " ID: " + thing.attributes.FacilityID + " FacilityRank: " + thing.attributes.FacilityRank);
+              insertAt(orderedIds, thing.attributes.FacilityRank, {
+                id: pNamesCategories[thing.attributes.FacilityID - 1].placeId,
+                name: pNamesCategories[thing.attributes.FacilityID - 1].name,
+                category:
+                  pNamesCategories[thing.attributes.FacilityID - 1].category,
+              });
+            });
+          });
+        placesList.innerHTML = "";
+        orderedIds.forEach((x) => {
+          reorderList(x);
+        });
+      }
+
+      async function reorderList(x) {
+        placeInfo.classList.add("hide");
+        const placeItem = document.createElement("div");
+        const placeTtle = document.createElement("div");
+        const placeCat = document.createElement("div");
+        placeTtle.innerHTML = x.name;
+        placeCat.innerHTML = x.category;
+        // placeItem.heading = x.name;
+        // placeItem.setAttribute("description", x.category);
+        placeItem.append(placeTtle);
+        placeItem.append(placeCat);
+        placesList.append(placeItem);
+        placeItem.classList.add("placeItem");
+        placeTtle.classList.add("placeTtle");
+        placeCat.classList.add("placeCat");
+        placeItem.addEventListener("click", (e) => {
+          goToPlace(x.id);
+          placeInfo.classList.remove("hide");
+        });
+      }
+
+      function goToPlace(id) {
+        marker = findMarker(id);
+        // map.flyTo(marker.getLatLng());
+        marker.openPopup();
+      }
+      function findMarker(id) {
+        return layerGroup.getLayers().find((item) => item.id === id);
+      }
+
+      function sortAlpha() {
+        map.closePopup();
+        placeInfo.classList.add("hide");
+        placesNamesCategories.sort(function (a, b) {
+          if (a.name < b.name) {
+            return -1;
+          }
+          if (a.name > b.name) {
+            return 1;
+          }
+          return 0;
+        });
+        placesList.innerHTML = "";
+        placesNamesCategories.forEach((x) => {
+          placeInfo.classList.add("hide");
+          const placeItem = document.createElement("div");
+          const placeTtle = document.createElement("div");
+          const placeCat = document.createElement("div");
+          placeTtle.innerHTML = x.name;
+          placeCat.innerHTML = x.category;
+          // placeItem.heading = x.name;
+          // placeItem.setAttribute("description", x.category);
+          placeItem.append(placeTtle);
+          placeItem.append(placeCat);
+          placesList.append(placeItem);
+          placeItem.classList.add("placeItem");
+          placeTtle.classList.add("placeTtle");
+          placeCat.classList.add("placeCat");
+          placeItem.addEventListener("click", (e) => {
+            goToPlace(x.placeId);
+            placeInfo.classList.remove("hide");
+          });
+        });
+      }
+
+      function resetSearch(visible) {
+        if (visible) {
+          closeButton.classList.remove("hide");
+        } else {
+          closeButton.classList.add("hide");
+        }
+      }
+
+      closeButton.addEventListener("click", (e) => {
+        sorting.style.opacity = 0;
+        input.value = "";
+        closeButton.classList.add("hide");
+        layerGroup.clearLayers();
+        placesList.innerHTML = "";
+        placeInfo.classList.add("hide");
+        placesList.classList.add("hide");
+        sortBy.classList.add("hide");
+        radioBtns.classList.add("hide");
+        button1.checked = false;
+        button2.checked = false;
+        orderedDistances = [];
+        if (placesIds.length != 0) {
+          placesIds = [];
+          placesNamesCategories = [];
+        }
+      });
+    </script>
+  </body>
+</html>
