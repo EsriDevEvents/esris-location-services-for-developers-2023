@@ -1,0 +1,124 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>ArcGIS Developer Guide: Service areas</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.26/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.26"></script>
+    <script>
+      require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/rest/networkService",
+        "esri/rest/serviceArea",
+        "esri/rest/support/ServiceAreaParameters",
+        "esri/rest/support/FeatureSet",
+        "esri/Graphic",
+        "esri/widgets/ScaleBar",
+      ], function (
+        esriConfig,
+        Map,
+        MapView,
+        networkService,
+        serviceArea,
+        ServiceAreaParameters,
+        FeatureSet,
+        Graphic,
+        ScaleBar
+      ) {
+        esriConfig.apiKey = "YOUR_API_KEY";
+        const url =
+          "https://route-api.arcgis.com/arcgis/rest/services/World/ServiceAreas/NAServer/ServiceArea_World";
+        let travelMode = null;
+        const map = new Map({
+          basemap: "arcgis-community",
+        });
+        const view = new MapView({
+          container: "viewDiv",
+          map,
+          center: [-117.1611, 32.7151],
+          zoom: 11,
+          constraints: {
+            snapToZoom: false,
+          },
+        });
+        view.ui.add(new ScaleBar({ view, style: "line" }), "bottom-right");
+        view.when(() => {
+          createServiceAreas(view.center);
+        });
+        function createServiceAreas(point) {
+          console.log(point);
+          // Remove any existing graphics
+          view.graphics.removeAll();
+          const locationGraphic = createGraphic(point);
+          findServiceArea(locationGraphic);
+        }
+        // Create the location point graphic
+        function createGraphic(geometry) {
+          // Create and add the point
+          const graphic = new Graphic({
+            geometry,
+            symbol: {
+              type: "simple-marker",
+              color: "white",
+              size: 10,
+            },
+          });
+          view.graphics.add(graphic);
+          return graphic;
+        }
+
+        async function findServiceArea(centerPt) {
+          const networkDescription =
+            await networkService.fetchServiceDescription(url);
+          const { serviceAreaPolygons } = await serviceArea.solve(
+            url,
+            new ServiceAreaParameters({
+              facilities: new FeatureSet({
+                features: [centerPt],
+              }),
+              // impedanceAttribute: "kilometers",
+              // travelMode: networkDescription.supportedTravelModes.find(
+              //   (mode) => mode.name === "Driving Time"
+              // ),
+              // defaultBreaks: [5, 10, 15],
+            })
+          );
+          showServiceAreas(serviceAreaPolygons);
+        }
+
+        //shows service area graphics
+        function showServiceAreas(serviceAreaPolygons) {
+          const graphics = serviceAreaPolygons.features.map((g) => {
+            g.symbol = {
+              type: "simple-fill",
+              color: "rgba(148, 0, 211, 0.3)",
+            };
+            return g;
+          });
+          view.graphics.addMany(graphics, 0);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
